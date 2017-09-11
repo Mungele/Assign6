@@ -6,9 +6,11 @@
   </head>
   <body>
     <h1>Subscribe</h1>
-    <form action="/newsletter" method="POST">
+    <form action="/newsletter/subscribe" method="POST">
       <label>E-mail:</label>
       <input type="text" name ="email"/>
+
+      <input type="hidden" name="_csrf" value="<%=csrftoken %>">
       <div><input type="submit"/></div>
     </form>
   </body>
