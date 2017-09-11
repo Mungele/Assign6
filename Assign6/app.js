@@ -5,6 +5,8 @@ var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var lessMiddleware = require('less-middleware');
+var validator = require('express-validator');
+var csrf = require('csurf');
 var fs = require('fs');
 
 var index = require('./routes/index');
@@ -17,6 +19,24 @@ var app = express();
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
+
+//set development env
+app.set('env','development');
+
+//enable trust proxy
+app.enable('trust proxy');
+app.set('trust proxy', true);
+
+//hide powered by Express
+app.set('x-powered-by', false);
+
+// enable case sensitive routing
+app.enable('case sensitive routing');
+
+//use strict routing
+app.set('strict routing', true);
+
+//setting port number
 app.set('port', process.env.PORT || 4000);
 var port = app.get('port');
 
@@ -28,32 +48,19 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(lessMiddleware(path.join(__dirname, 'public')));
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(validator());
+app.use(csrf({cookie:true}));
+
+app.use(function (req, res, next) {
+  res.locals.csrftoken = req.csrfToken();
+  next();
+
+})
 
 app.use('/', index);
 app.use('/users', users);
 app.use('/newsletter',newsletter);
-
-
-//get the email and save cookie
-//if cookie already excist by path authentication
-const getEmail = function( req, res, next){
-  console.log('in get post ');
-  if (req.cookie){
-
-      res.render('thankyou',{greeting:"thank you"});
-  }else if (req.body.email) {
-      var save_email = fs.appendFile(__dirname +'/subccribers.txt', req.body.email,
-          function (err, data) {
-              if (err) throw err;
-              console.log('appended saved');
-          });
-      res.render('thankyou',{greeting:"thank you"});
-  }
-    //res.render(newsletter);
-    //next();
-};
-//getting the request from port and sending response
-app.post('/newsletter', getEmail );
+app.use('/thankyou', thankyou);
 
 
 app.listen(port,function(){
